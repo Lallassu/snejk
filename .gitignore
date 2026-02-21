@@ -1,0 +1,11 @@
+old
+alienz
+/snake
+android-sdk/
+android-jdk/
+android-gradle/
+.android-tmp/
+android/.gradle/
+android/local.properties
+android/app/build/
+build/

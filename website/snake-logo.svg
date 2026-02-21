@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 170" role="img" aria-labelledby="title desc">
+  <title id="title">Qake The Snake logo</title>
+  <desc id="desc">Retro pixel-style green snake icon with tongue and glowing eye.</desc>
+  <defs>
+    <linearGradient id="snakeBody" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#d7ff62"/>
+      <stop offset="55%" stop-color="#95ef2f"/>
+      <stop offset="100%" stop-color="#4da51a"/>
+    </linearGradient>
+    <linearGradient id="snakeBelly" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f7ffad"/>
+      <stop offset="100%" stop-color="#d2f06b"/>
+    </linearGradient>
+  </defs>
+
+  <path d="M24 124 L64 124 L64 96 L92 96 L92 132 L132 132 L132 88 L166 88 L166 56 L194 56"
+        fill="none" stroke="#0c1219" stroke-width="26" stroke-linecap="square" stroke-linejoin="miter"/>
+  <path d="M24 124 L64 124 L64 96 L92 96 L92 132 L132 132 L132 88 L166 88 L166 56 L194 56"
+        fill="none" stroke="url(#snakeBody)" stroke-width="20" stroke-linecap="square" stroke-linejoin="miter"/>
+  <path d="M28 123 L62 123 L62 99 L88 99 L88 129 L128 129 L128 92 L160 92 L160 60 L188 60"
+        fill="none" stroke="url(#snakeBelly)" stroke-width="7" stroke-linecap="square" stroke-linejoin="miter" opacity="0.9"/>
+
+  <rect x="39" y="115" width="7" height="7" fill="#326d12" opacity="0.55"/>
+  <rect x="74" y="100" width="7" height="7" fill="#326d12" opacity="0.55"/>
+  <rect x="103" y="122" width="7" height="7" fill="#326d12" opacity="0.55"/>
+  <rect x="142" y="96" width="7" height="7" fill="#326d12" opacity="0.55"/>
+  <rect x="171" y="64" width="7" height="7" fill="#326d12" opacity="0.55"/>
+
+  <path d="M194 43 L220 43 L228 51 L228 67 L220 75 L194 75 L186 67 L186 51 Z"
+        fill="url(#snakeBody)" stroke="#0c1219" stroke-width="6" stroke-linejoin="miter"/>
+  <path d="M196 58 L218 58" stroke="#dff58f" stroke-width="5" stroke-linecap="square"/>
+  <rect x="210" y="49" width="8" height="8" fill="#0b151f"/>
+  <rect x="212" y="51" width="4" height="4" fill="#ffffff"/>
+
+  <path d="M228 58 L238 55 L238 61 Z" fill="#ff5f6b"/>
+  <path d="M228 58 L238 65" stroke="#ff5f6b" stroke-width="3" stroke-linecap="square"/>
+</svg>

@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Qake The Snake - Urban Rampage Snake Action</title>
+  <meta name="description" content="Qake The Snake is a chaotic top-down city rampage game. Grow, swarm, explode, and survive the night.">
+  <meta property="og:title" content="Qake The Snake">
+  <meta property="og:description" content="Urban chaos. Snake mayhem. Massive explosions.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://qake.se/">
+  <meta name="theme-color" content="#0f1217">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1217;
+      --bg-elev: #161c25;
+      --ink: #eef6ff;
+      --muted: #a7bacd;
+      --line: #2b3645;
+      --acid: #96ff34;
+      --acid-dim: #4e8f15;
+      --lava: #ff6a2a;
+      --sky: #6fd9ff;
+      --maxw: 1180px;
+      --radius: 18px;
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: "Chakra Petch", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(900px 600px at 85% -5%, rgba(255, 106, 42, 0.16), transparent 60%),
+        radial-gradient(700px 460px at 10% 0%, rgba(150, 255, 52, 0.14), transparent 60%),
+        linear-gradient(180deg, #0f1217 0%, #121925 48%, #0f1217 100%);
+      line-height: 1.45;
+    }
+
+    .grid-noise::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.14;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 44px 44px, 44px 44px;
+      mask-image: radial-gradient(circle at center, black 22%, transparent 85%);
+    }
+
+    a { color: inherit; text-decoration: none; }
+    .wrap { width: min(var(--maxw), calc(100% - 2rem)); margin-inline: auto; }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(10px);
+      background: rgba(10, 14, 19, 0.75);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 68px;
+      gap: 1rem;
+    }
+
+    .brand-mini {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--acid), #e0ff64);
+      box-shadow: 0 0 18px rgba(150,255,52,0.8);
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.02);
+      padding: 0.52rem 0.78rem;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      color: var(--muted);
+      transition: 0.2s ease;
+    }
+
+    .pill:hover {
+      border-color: rgba(255,255,255,0.3);
+      color: var(--ink);
+      transform: translateY(-1px);
+    }
+
+    .hero {
+      padding: clamp(2.6rem, 5vw, 5.4rem) 0 clamp(2.2rem, 4vw, 3.6rem);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .logo-snake {
+      width: clamp(88px, 12vw, 128px);
+      height: auto;
+      flex-shrink: 0;
+      filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.42)) drop-shadow(0 0 20px rgba(150,255,52,0.24));
+    }
+
+    .logo-title {
+      line-height: 0.88;
+      letter-spacing: 0.02em;
+    }
+
+    .logo-title .qake {
+      font-family: "Bebas Neue", Impact, sans-serif;
+      font-size: clamp(3.2rem, 8vw, 5.6rem);
+      color: var(--acid);
+      text-shadow: 0 0 22px rgba(150,255,52,0.38);
+      display: block;
+    }
+
+    .logo-title .snake {
+      font-family: "Bebas Neue", Impact, sans-serif;
+      font-size: clamp(1.8rem, 4.4vw, 3.3rem);
+      color: var(--lava);
+      letter-spacing: 0.11em;
+      display: block;
+      transform: translateY(-4px);
+    }
+
+    .lead {
+      max-width: 58ch;
+      color: #d6e3f2;
+      font-size: clamp(1.02rem, 1.7vw, 1.2rem);
+    }
+
+    .hero-actions {
+      margin-top: 1.3rem;
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 1px solid transparent;
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      font-weight: 700;
+      font-size: 0.96rem;
+      transition: transform 0.2s ease, filter 0.2s ease, border-color 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
+    .btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--acid), #d7ff53);
+      color: #10230a;
+      box-shadow: 0 10px 25px rgba(150,255,52,0.26);
+    }
+    .btn-ghost {
+      border-color: #3a495c;
+      color: var(--ink);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .hero-shot {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transform: perspective(900px) rotateY(-4deg) rotateX(2deg);
+    }
+
+    .hero-shot img {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 10;
+      object-fit: cover;
+    }
+
+    section {
+      padding: clamp(1.7rem, 4vw, 3rem) 0;
+    }
+
+    .section-title {
+      font-family: "Bebas Neue", Impact, sans-serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      letter-spacing: 0.04em;
+      margin: 0 0 0.8rem;
+      color: #edf6ff;
+    }
+
+    .section-sub {
+      margin: 0 0 1.2rem;
+      color: var(--muted);
+      max-width: 70ch;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.9rem;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+
+    .card h3 {
+      margin: 0 0 0.4rem;
+      font-size: 1rem;
+      letter-spacing: 0.02em;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.93rem;
+    }
+
+    .shots {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.65rem;
+    }
+
+    .shot {
+      border: 1px solid #2a3444;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      min-height: 140px;
+    }
+
+    .shot::after {
+      content: "VIEW";
+      position: absolute;
+      right: 0.45rem;
+      bottom: 0.45rem;
+      font-size: 0.67rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #fff;
+      background: rgba(0,0,0,0.55);
+      padding: 0.2rem 0.35rem;
+      border-radius: 6px;
+    }
+
+    .shot img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.25s ease;
+    }
+
+    .shot:hover img { transform: scale(1.05); }
+
+    .download-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.9rem;
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.9rem;
+    }
+
+    .download-card h3 {
+      margin: 0 0 0.3rem;
+      font-size: 1.05rem;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 0.16rem 0.42rem;
+      border-radius: 999px;
+      border: 1px solid #3b4c62;
+      color: #bdd0e5;
+      font-size: 0.72rem;
+      margin-bottom: 0.7rem;
+    }
+
+    .download-card .btn {
+      width: 100%;
+      justify-content: center;
+      margin-top: 0.8rem;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 0.9rem;
+    }
+
+    .full-span {
+      grid-column: 1 / -1;
+    }
+
+    .social-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--muted);
+      font-weight: 600;
+      border-bottom: 1px dashed #3e4f63;
+      padding-bottom: 0.15rem;
+    }
+
+    footer {
+      margin-top: 1.4rem;
+      border-top: 1px solid var(--line);
+      color: #94a9bf;
+      font-size: 0.92rem;
+    }
+
+    .foot {
+      display: flex;
+      gap: 1rem;
+      min-height: 66px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(14px);
+      animation: reveal 0.7s ease forwards;
+      animation-delay: var(--d, 0s);
+    }
+
+    @keyframes reveal {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: none;
+      place-items: center;
+      padding: 1rem;
+      background: rgba(5, 8, 12, 0.88);
+      backdrop-filter: blur(4px);
+    }
+
+    .lightbox.open { display: grid; }
+    .lightbox img {
+      max-width: min(1300px, 96vw);
+      max-height: 90vh;
+      border-radius: 12px;
+      border: 1px solid #415067;
+      box-shadow: var(--shadow);
+    }
+    .lightbox-nav {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 1px solid #3b4a5f;
+      color: #dce8f4;
+      background: rgba(18, 25, 37, 0.9);
+      width: 46px;
+      height: 46px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 1.25rem;
+      z-index: 41;
+    }
+    .lightbox-prev { left: 1rem; }
+    .lightbox-next { right: 1rem; }
+    .lightbox-index {
+      position: fixed;
+      left: 50%;
+      bottom: 1rem;
+      transform: translateX(-50%);
+      border: 1px solid #3b4a5f;
+      color: #dce8f4;
+      background: rgba(18, 25, 37, 0.9);
+      border-radius: 999px;
+      padding: 0.28rem 0.75rem;
+      font-size: 0.86rem;
+      letter-spacing: 0.04em;
+      z-index: 41;
+    }
+    .close {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      border: 1px solid #3b4a5f;
+      color: #dce8f4;
+      background: rgba(18, 25, 37, 0.9);
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 1.15rem;
+      z-index: 41;
+    }
+
+    @media (max-width: 1040px) {
+      .hero-grid,
+      .meta { grid-template-columns: 1fr; }
+      .hero-shot { transform: none; }
+      .feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .about-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .shots { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      .feature-grid,
+      .download-grid,
+      .shots { grid-template-columns: 1fr 1fr; }
+      .about-grid { grid-template-columns: 1fr; }
+      .logo-snake { width: 88px; }
+      .topbar { padding: 0.55rem 0; }
+      nav { display: none; }
+    }
+
+    @media (max-width: 520px) {
+      .feature-grid,
+      .download-grid,
+      .shots { grid-template-columns: 1fr; }
+      .logo-title .qake { font-size: 3rem; }
+      .logo-title .snake { font-size: 1.5rem; }
+      .lightbox-nav { width: 40px; height: 40px; }
+      .lightbox-prev { left: 0.5rem; }
+      .lightbox-next { right: 0.5rem; }
+    }
+  </style>
+</head>
+<body class="grid-noise">
+  <header>
+    <div class="wrap topbar">
+      <a href="#top" class="brand-mini">
+        <span class="dot" aria-hidden="true"></span>
+        <span>QAKE THE SNAKE</span>
+      </a>
+      <nav>
+        <a class="pill" href="#about">About</a>
+        <a class="pill" href="#features">Features</a>
+        <a class="pill" href="#screens">Screenshots</a>
+        <a class="pill" href="#downloads">Download</a>
+        <a class="pill" href="https://github.com/Lallassu/snejk" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero wrap">
+      <div class="hero-grid">
+        <div>
+          <div class="logo fade-in" style="--d: 0.05s;">
+            <img class="logo-snake" src="snake-logo.png" alt="Qake The Snake pixel snake logo">
+            <div class="logo-title">
+              <span class="qake">QAKE</span>
+              <span class="snake">THE SNAKE</span>
+            </div>
+          </div>
+          <p class="lead fade-in" style="--d: 0.15s;">
+            A fast, chaotic city-rampage action game where your snake grows from every kill.
+            Smash through streets, trigger absurd bonuses, survive police escalation, and light up
+            the entire skyline. Available on desktop and Android. Built with Golang and OpenGL.
+          </p>
+          <div class="hero-actions fade-in" style="--d: 0.25s;">
+            <a class="btn btn-primary" href="#downloads">Download Now</a>
+            <a class="btn btn-ghost" href="#screens">Watch Screenshots</a>
+            <a class="btn btn-ghost" href="https://github.com/Lallassu/snejk" target="_blank" rel="noopener noreferrer">View Source</a>
+          </div>
+        </div>
+        <aside class="hero-shot fade-in" style="--d: 0.35s;">
+          <img src="screenshots/2026-02-21_12-40-07.png" alt="Qake The Snake gameplay screenshot with city destruction and explosions">
+        </aside>
+      </div>
+    </section>
+
+    <section id="features" class="wrap">
+      <p class="section-sub">Qake The Snake blends tight movement, large-scale destruction, and outrageous powerups into short sessions that stay intense the whole run.</p>
+      <div class="feature-grid">
+        <article class="card"><h3>Urban Destruction</h3><p>Tear through building blocks, crack roads, and trigger chain explosions that reshape the map.</p></article>
+        <article class="card"><h3>Swarm Chaos</h3><p>Split into ghost segments, hunt targets, and reunite into one massive predator.</p></article>
+        <article class="card"><h3>Escalating Heat</h3><p>Cops and military pressure intensify as your run grows deadlier.</p></article>
+        <article class="card"><h3>Wild Bonuses</h3><p>Missiles, gatling, vacuum, surge, firestorms, tactical nukes, exploding pigs, air support and more many more...</p></article>
+      </div>
+    </section>
+
+    <section id="screens" class="wrap">
+      <h2 class="section-title">Screenshots</h2>
+      <p class="section-sub">Raw in-game captures from active development on desktop and Android.</p>
+      <div class="shots">
+        <button class="shot" type="button" data-src="screenshots/2026-02-21_12-40-07.png"><img src="screenshots/2026-02-21_12-40-07.png" alt="Qake The Snake screenshot 1"></button>
+        <button class="shot" type="button" data-src="screenshots/2026-02-21_12-40-34.png"><img src="screenshots/2026-02-21_12-40-34.png" alt="Qake The Snake screenshot 2"></button>
+        <button class="shot" type="button" data-src="screenshots/2026-02-21_12-40-43.png"><img src="screenshots/2026-02-21_12-40-43.png" alt="Qake The Snake screenshot 3"></button>
+        <button class="shot" type="button" data-src="screenshots/2026-02-21_12-40-54.png"><img src="screenshots/2026-02-21_12-40-54.png" alt="Qake The Snake screenshot 4"></button>
+        <button class="shot" type="button" data-src="screenshots/2026-02-21_12-41-07.png"><img src="screenshots/2026-02-21_12-41-07.png" alt="Qake The Snake screenshot 5"></button>
+        <button class="shot" type="button" data-src="screenshots/2026-02-21_12-41-39.png"><img src="screenshots/2026-02-21_12-41-39.png" alt="Qake The Snake screenshot 6"></button>
+        <button class="shot" type="button" data-src="screenshots/2026-02-21_12-41-59.png"><img src="screenshots/2026-02-21_12-41-59.png" alt="Qake The Snake screenshot 7"></button>
+        <button class="shot" type="button" data-src="screenshots/2026-02-21_12-42-18.png"><img src="screenshots/2026-02-21_12-42-18.png" alt="Qake The Snake screenshot 8"></button>
+        <button class="shot" type="button" data-src="screenshots/2026-02-21_12-42-35.png"><img src="screenshots/2026-02-21_12-42-35.png" alt="Qake The Snake screenshot 9"></button>
+        <button class="shot" type="button" data-src="screenshots/2026-02-21_12-42-46.png"><img src="screenshots/2026-02-21_12-42-46.png" alt="Qake The Snake screenshot 10"></button>
+        <button class="shot" type="button" data-src="screenshots/Screenshot_20260221-124359.jpg"><img src="screenshots/Screenshot_20260221-124359.jpg" alt="Qake The Snake screenshot 11"></button>
+        <button class="shot" type="button" data-src="screenshots/Screenshot_20260221-124402.jpg"><img src="screenshots/Screenshot_20260221-124402.jpg" alt="Qake The Snake screenshot 12"></button>
+        <button class="shot" type="button" data-src="screenshots/Screenshot_20260221-124429.jpg"><img src="screenshots/Screenshot_20260221-124429.jpg" alt="Qake The Snake screenshot 13"></button>
+        <button class="shot" type="button" data-src="screenshots/Screenshot_20260221-124440.jpg"><img src="screenshots/Screenshot_20260221-124440.jpg" alt="Qake The Snake screenshot 14"></button>
+        <button class="shot" type="button" data-src="screenshots/Screenshot_20260221-124508.jpg"><img src="screenshots/Screenshot_20260221-124508.jpg" alt="Qake The Snake screenshot 15"></button>
+      </div>
+
+    </section>
+
+    <section id="downloads" class="wrap">
+      <h2 class="section-title">Download</h2>
+      <p class="section-sub">Choose your platform. Desktop builds are standalone binaries and Android is distributed as an APK.</p>
+      <div class="download-grid">
+        <article class="card download-card">
+          <h3>Windows</h3>
+          <span class="tag">x64</span>
+          <p>ZIP package with executable and runtime assets.</p>
+          <a class="btn btn-primary" href="https://github.com/Lallassu/snejk/releases/latest/download/qake-the-snake-windows-amd64.zip">Download .zip</a>
+        </article>
+        <article class="card download-card">
+          <h3>Linux</h3>
+          <span class="tag">x64</span>
+          <p>TAR package for modern desktop distributions.</p>
+          <a class="btn btn-primary" href="https://github.com/Lallassu/snejk/releases/latest/download/qake-the-snake-linux-amd64.tar.gz">Download .tar.gz</a>
+        </article>
+        <article class="card download-card">
+          <h3>macOS</h3>
+          <span class="tag">arm64 + amd64</span>
+          <p>Universal TAR package with both macOS binaries.</p>
+          <a class="btn btn-primary" href="https://github.com/Lallassu/snejk/releases/latest/download/qake-the-snake-macos-universal.tar.gz">Download .tar.gz</a>
+        </article>
+        <article class="card download-card">
+          <h3>Android</h3>
+          <span class="tag">APK</span>
+          <p>Installable Android package built from the same game codebase.</p>
+          <a class="btn btn-primary" href="https://github.com/Lallassu/snejk/releases/latest/download/qake-the-snake-android.apk">Download .apk</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="meta">
+        <article class="card full-span">
+          <h3>Open Source</h3>
+          <p>The codebase is on GitHub. Fork it, profile it, break it, and contribute improvements.</p>
+          <p><a class="social-link" href="https://github.com/Lallassu/snejk" target="_blank" rel="noopener noreferrer">github.com/Lallassu/snejk</a></p>
+        </article>
+      </div>
+    </section>
+
+    <section id="about" class="wrap">
+      <h2 class="section-title">About</h2>
+      <p class="section-sub">
+        Qake The Snake is a 100% generated game experiment. It is generated end-to-end, but its idea/base/tech is grounded
+        in ideas from real, long-developed open-source game projects.
+      </p>
+      <div class="about-grid">
+        <article class="card">
+          <h3>Games</h3>
+          <p><a class="social-link" href="https://github.com/Lallassu/wizardwarz" target="_blank" rel="noopener noreferrer">Wizard Warz</a></p>
+          <p><a class="social-link" href="https://github.com/Lallassu/badsanta" target="_blank" rel="noopener noreferrer">Bad Santa</a></p>
+          <p><a class="social-link" href="https://github.com/Lallassu/bintris" target="_blank" rel="noopener noreferrer">bintris</a></p>
+          <p><a class="social-link" href="https://github.com/Lallassu/Savingnemo" target="_blank" rel="noopener noreferrer">Savingnemo</a></p>
+          <p><a class="social-link" href="https://github.com/Lallassu/Parrothunt" target="_blank" rel="noopener noreferrer">Parrothunt</a></p>
+          <p><a class="social-link" href="https://github.com/Lallassu/qake" target="_blank" rel="noopener noreferrer">Qake</a></p>
+          <p><a class="social-link" href="https://github.com/Lallassu/moonshot" target="_blank" rel="noopener noreferrer">Moonshot</a></p>
+          <p><a class="social-link" href="https://github.com/Lallassu/VoxLords" target="_blank" rel="noopener noreferrer">VoxLords</a></p>
+        </article>
+        <article class="card">
+          <h3>Ideas / Prototypes</h3>
+          <p><a class="social-link" href="https://github.com/Lallassu/gizmo" target="_blank" rel="noopener noreferrer">gizmo</a></p>
+          <p><a class="social-link" href="https://github.com/Lallassu/vox2" target="_blank" rel="noopener noreferrer">vox2</a></p>
+          <p><a class="social-link" href="https://github.com/Lallassu/voxelengine_unity" target="_blank" rel="noopener noreferrer">voxelengine_unity</a></p>
+        </article>
+        <article class="card">
+          <h3>Engines / Tech</h3>
+          <p><a class="social-link" href="https://github.com/Lallassu/voxelengine3" target="_blank" rel="noopener noreferrer">voxelengine3</a></p>
+          <p><a class="social-link" href="https://github.com/Lallassu/voxelengine_urho3d" target="_blank" rel="noopener noreferrer">voxelengine_urho3d</a></p>
+          <p><a class="social-link" href="https://github.com/lallassu" target="_blank" rel="noopener noreferrer">...more on github.com/lallassu</a></p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <span>Qake The Snake</span>
+    </div>
+  </footer>
+
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <button class="lightbox-nav lightbox-prev" id="prevLightbox" aria-label="Previous screenshot">&larr;</button>
+    <button class="lightbox-nav lightbox-next" id="nextLightbox" aria-label="Next screenshot">&rarr;</button>
+    <button class="close" id="closeLightbox" aria-label="Close screenshot viewer">X</button>
+    <img id="lightboxImage" alt="Selected Qake The Snake screenshot">
+    <span class="lightbox-index" id="lightboxIndex">1 / 1</span>
+  </div>
+
+  <script>
+    (function () {
+      const lightbox = document.getElementById("lightbox");
+      const lightboxImage = document.getElementById("lightboxImage");
+      const closeLightbox = document.getElementById("closeLightbox");
+      const prevLightbox = document.getElementById("prevLightbox");
+      const nextLightbox = document.getElementById("nextLightbox");
+      const lightboxIndex = document.getElementById("lightboxIndex");
+      const shots = Array.from(document.querySelectorAll(".shot"));
+      let currentIndex = -1;
+
+      function showAt(index) {
+        if (!shots.length) return;
+        const len = shots.length;
+        currentIndex = ((index % len) + len) % len;
+        const src = shots[currentIndex].getAttribute("data-src");
+        if (!src) return;
+        lightboxImage.src = src;
+        lightboxIndex.textContent = (currentIndex + 1) + " / " + len;
+        lightbox.classList.add("open");
+        lightbox.setAttribute("aria-hidden", "false");
+      }
+
+      shots.forEach((btn, index) => {
+        btn.addEventListener("click", () => showAt(index));
+      });
+
+      function close() {
+        lightbox.classList.remove("open");
+        lightbox.setAttribute("aria-hidden", "true");
+        lightboxImage.removeAttribute("src");
+        currentIndex = -1;
+      }
+
+      closeLightbox.addEventListener("click", close);
+      prevLightbox.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (currentIndex >= 0) showAt(currentIndex - 1);
+      });
+      nextLightbox.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (currentIndex >= 0) showAt(currentIndex + 1);
+      });
+      lightbox.addEventListener("click", (e) => {
+        if (e.target === lightbox) close();
+      });
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          close();
+          return;
+        }
+        if (!lightbox.classList.contains("open")) return;
+        if (e.key === "ArrowLeft") showAt(currentIndex - 1);
+        if (e.key === "ArrowRight") showAt(currentIndex + 1);
+      });
+    })();
+  </script>
+</body>
+</html>
